@@ -1,0 +1,153 @@
+/* SIBDS  APPLIED PROJECT 3 */
+/* clinicial trial data analysis */
+
+/* Table 1 - Summary statistics for continuous variables */
+
+
+proc means data = fq_weightb12 n mean median std var min max p25 p75; 
+var age bmi averagecigarettesday;
+run;
+
+proc univariate data = fq_weightb12 normal plot;
+var age bmi;
+run;
+
+proc means data = fq_weightb12 n mean median std var min max p25 p75; 
+class trt;
+var age bmi averagecigarettesday;
+run;
+
+proc univariate data = fq_weightb12 normal plot;
+var age bmi averagecigarettesday;
+run;
+
+/* example of two-sample t-test and wilcoxon test*/
+
+proc ttest data = fq_weightb12;
+class trt;
+var age bmi averagecigarettesday;
+where trt in ('B' 'C');
+run;
+
+proc npar1way data = fq_weightb12 wilcoxon;
+class trt;
+var age;
+where trt in ('B' 'C');
+run;
+
+/* ANOVA */
+
+proc glm data = fq_weightb12;
+class trt;
+model age = trt / solution;
+lsmeans trt / adj=bon;
+run;
+
+proc mixed data = fq_weightb12;
+class trt;
+model age = trt / solution;
+lsmeans trt / adj=bon;
+run;
+
+/* Table 1 - Summary statistics for categorical variables */
+
+proc freq data = fq_weightb12;
+tables trt gender white ethnicity married educ inc;
+run;
+
+proc freq data = fq_weightb12;
+tables trt*(gender white ethnicity married educ inc)/chisq;
+exact chisq;
+run;
+
+/* missing data */
+
+proc means data = fq_weightb12;
+var bvweight weightavg;
+run;
+
+proc freq data = fq_weightb12;
+tables trt*missingweight12/chisq;
+run;
+
+proc ttest data = fq_weightb12;
+class missingweight12;
+var age bmi averagecigarettesday;
+run;
+
+proc freq data = fq_weightb12;
+tables missingweight12*(gender white ethnicity married educ inc)/chisq;
+run;
+
+******************************************************************************************;
+
+/* Analysis of weight change */
+
+proc means data = fq_weightb12;
+var weightdiff_b12;
+run;
+
+proc means data = fq_weightb12;
+class trt;
+var weightdiff_b12;
+run;
+
+proc univariate data = fq_weightb12;
+class trt;
+var weightdiff_b12;
+run;
+
+/* paired t-test by group */
+proc sort data = fq_weightb12; by trt; run;
+proc ttest data = fq_weightb12;
+paired bvweight*weightavg;
+by trt;
+run;
+
+*anova;
+proc glm data = fq_weightb12;
+class trt;
+model weightdiff_b12 = trt / solution;
+lsmeans trt / adj=bon;
+run;
+
+/* ANCOVA - analysis of covariance */
+proc mixed data = fq_weightb12;
+class trt;
+model weightdiff_b12 = trt bvweight/ solution;
+lsmeans trt / adj=bon;
+run;
+
+proc mixed data = fq_weightb12;
+class trt;
+model weightdiff_b12 = trt bvweight/ solution;
+lsmeans trt / adj=bon;
+run;
+
+proc mixed data=fq_weightb12;
+class trt (ref='C') pointprev (ref='0') gender white (ref='0') ethnicity (ref='0') married (ref='0') educ (ref='0') inc (ref='0') rurality (ref='0');
+model weightdiff_b12=trt|pointprev  bvweight age gender bmi white ethnicity married educ inc ftnd_score0 rurality/ solution;
+lsmeans trt|pointprev / adj=bon ;
+run;
+
+proc mi data=fq_weightb12 seed=0 nimpute=1 out=outex10;
+mcmc impute=monotone;
+var bvweight weightavg;
+run;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
